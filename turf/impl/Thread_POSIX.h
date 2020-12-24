@@ -67,8 +67,8 @@ public:
 #if !TURF_TARGET_MINGW
     static void sleepMillis(ureg millis) {
         timespec ts;
-        ts.tv_sec = millis / 1000;
-        ts.tv_nsec = (millis % 1000) * 1000000;
+        ts.tv_sec = (int)millis / 1000;
+        ts.tv_nsec = ((int)millis % 1000) * 1000000;
         int rc;
         do {
             rc = nanosleep(&ts, NULL);
