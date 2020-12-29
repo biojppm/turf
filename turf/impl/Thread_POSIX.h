@@ -64,14 +64,12 @@ public:
         m_attached = false;
     }
 
-    void setName(const char *name)
-    {
+    void setName(const char *name) {
         TURF_ASSERT(strlen(name) < 16);
         pthread_setname_np(m_handle, name);
     }
 
-    void getName(char *buf, size_t len)
-    {
+    void getName(char *buf, size_t len) {
         TURF_ASSERT(strlen(name) >= 16);
         pthread_getname_np(m_handle, buf, len);
     }

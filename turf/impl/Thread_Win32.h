@@ -35,6 +35,10 @@ public:
         m_handle = CreateThread(NULL, 0, startRoutine, arg, 0, NULL);
     }
 
+    Thread_Win32(void* (*startRoutine)(void*), void *arg=NULL)
+        : Thread_Win32((PTHREAD_START_ROUTINE)startRoutine, arg) {
+    }
+
     ~Thread_Win32() {
         if (m_handle != INVALID_HANDLE_VALUE)
             CloseHandle(m_handle);
@@ -51,9 +55,34 @@ public:
         m_handle = INVALID_HANDLE_VALUE;
     }
 
+    void setName(const char *name) {
+        TURF_ASSERT(strlen(name) < 16);
+        // sucks, having to do this. why does windows not have an ascii API?
+        wchar_t namebuf[16];
+        MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, name, (int)strlen(name), namebuf, 16);
+        SetThreadDescription(m_handle, namebuf);
+    }
+
+    void getName(char *buf, size_t len) {
+        TURF_ASSERT(strlen(name) >= 16);
+        // sucks, having to do this. why does windows not have an ascii API?
+        wchar_t *wbuf = nullptr;
+        HRESULT hr = GetThreadDescription(m_handle, &wbuf);
+        if (SUCCEEDED(hr) && wbuf) {   
+            WideCharToMultiByte(CP_UTF8, MB_PRECOMPOSED,
+                wbuf, lstrlenW(wbuf),
+                buf, (int)len, nullptr, nullptr);
+            LocalFree(wbuf);
+        }
+    }
+
     void run(StartRoutine startRoutine, void* arg = NULL) {
         TURF_ASSERT(m_handle == INVALID_HANDLE_VALUE);
         m_handle = CreateThread(NULL, 0, startRoutine, arg, 0, NULL);
+    }
+
+    void run(void* (*startRoutine)(void*), void *arg=NULL) {
+        run((PTHREAD_START_ROUTINE)startRoutine, arg);
     }
 
     static void sleepMillis(ureg millis) {
